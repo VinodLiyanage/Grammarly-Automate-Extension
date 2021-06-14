@@ -1,0 +1,36 @@
+{
+    "name":"Grammarly Automator V1.0",
+    "version": "1.0.0",
+    "manifest_version": 3,
+    "description": "Automate all the suggestions on grammarly.com",
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_title": "Grammarly Automator",
+        "default_icon": {   
+          "16":"/assets/images/logo.png",
+          "24":"/assets/images/logo.png",
+          "32":"/assets/images/logo.png",
+          "128":"/assets/images/logo.png"                    
+      }
+    },
+    "content_scripts" : [
+      {
+        "matches": ["*://app.grammarly.com/*"],
+        "run_at": "document_end",
+        "js": [
+          "/assets/js/contentScripts/automate.js"
+        ]
+      }
+    ],
+    "permissions":[
+      "tabs"
+    ],
+    "icons": {   
+      "16":"/assets/images/logo.png",
+      "24":"/assets/images/logo.png",
+      "32":"/assets/images/logo.png",
+      "128":"/assets/images/logo.png"                    
+  }
+}
