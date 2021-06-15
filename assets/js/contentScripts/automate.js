@@ -13,40 +13,14 @@ class Observer {
     this.observer.observe(this.target, this.config);
   }
 
-  async replacer(suggestionCardsList) {
-    for (let parentCard of suggestionCardsList) {
-      const card = parentCard.querySelector('div[data-aid]')
-      if(!(card && card instanceof HTMLElement)) continue;
-
-      await new Promise((resolve) => {
-        setTimeout(() => {
-          card.click();
-
-          const replaceBtn = parentCard.querySelector(
-            'div[data-name="card/apply-insert"]'
-          );
-          const removeBtn = parentCard.querySelector(
-            'div[data-name="card/apply-remove"]'
-          );
-
-          if (replaceBtn && replaceBtn instanceof HTMLElement) {
-            replaceBtn.click() 
-          }
-          if (removeBtn && removeBtn instanceof HTMLElement) {
-            removeBtn.click()
-          }
-          resolve(true);
-        }, 1000);
-      });
-    }
-  }
-
   setEndOfContenteditable(contentEditableElement) {
-    if(!(contentEditableElement && contentEditableElement instanceof HTMLElement)) return;
+    if (
+      !(contentEditableElement && contentEditableElement instanceof HTMLElement)
+    )
+      return;
 
     let range, selection;
     if (document.createRange) {
-     
       range = document.createRange(); //Create a range (a range is a like the selection but invisible)
       range.selectNodeContents(contentEditableElement); //Select the entire contents of the element with the range
       range.collapse(false); //collapse the range to the end point. false means collapse to end rather than the start
@@ -60,33 +34,114 @@ class Observer {
       range.collapse(false); //collapse the range to the end point. false means collapse to end rather than the start
       range.select(); //Select the range (make it the visible selection
     }
+    log("setEndOfContenteditable is done");
   }
 
-  async observerCallback(mutationsList, observer) {
-    log("observer is called!");
-
-    for (let mutation of mutationsList) {
-      if (!mutation.addedNodes.length) continue;
-      if (mutation.removedNodes.length) continue;
-      if (mutation.addedNodes[0].nodeName !== "DIV") continue;
-      if (!this.target.querySelector('div[data-purpose="card-list-connector"]')) continue;
-
+  async replacer() {
+    while (true) {
       let suggestionCardsList = Array.from(
         this.target.querySelectorAll(
           'div[data-purpose="card-list-connector"] div[data-id]'
         ) || []
       );
-      if (!suggestionCardsList.length) continue;
 
-      log("mutation", mutation);
+      if (!suggestionCardsList.length) break;
 
-      observer.disconnect();
-      await this.replacer(suggestionCardsList);
-      this.setEndOfContenteditable(document.querySelector(".ql-editor"));
-      observer.observe(this.target, this.config);
+      const isCardsAvailable = suggestionCardsList.some((card) => {
+        return card.querySelector("div[data-aid]") ? true : false;
+      });
+
+      if (!isCardsAvailable) break;
+
+      let isCardFake = true;
+
+      for (let parentElement of suggestionCardsList) {
+        const card = parentElement.querySelector("div[data-aid]");
+        if (!(card && card instanceof HTMLElement)) continue;
+
+        card.click();
+
+        const replaceBtn = parentElement.querySelector(
+          'div[data-name="card/apply-insert"]'
+        );
+        const removeBtn = parentElement.querySelector(
+          'div[data-name="card/apply-remove"]'
+        );
+        const updateAll = parentElement.querySelector(
+          'div[data-name="card/update-all"]'
+        );
+        const ignoreBtn = parentElement.querySelector(
+          'div[data-name="card/ignore"]'
+        );
+        const bulkAccept = parentElement.querySelector(
+          'div[data-name="card/bulk-accept-apply"]'
+        );
+
+        if (
+          !(replaceBtn || removeBtn || updateAll || ignoreBtn || bulkAccept)
+        ) {
+          continue;
+        } else {
+          isCardFake = false;
+        }
+
+        await new Promise((resolve) => {
+          const timeOut = setTimeout(() => {
+            if (replaceBtn && replaceBtn instanceof HTMLElement) {
+              replaceBtn.click();
+            } else if (removeBtn && removeBtn instanceof HTMLElement) {
+              removeBtn.click();
+            } else if (bulkAccept && bulkAccept instanceof HTMLElement) {
+              bulkAccept.click();
+            } else if (updateAll && updateAll instanceof HTMLElement) {
+              updateAll.click();
+            } else if (ignoreBtn && ignoreBtn instanceof HTMLElement) {
+              ignoreBtn.click();
+            }
+
+            try {
+              if (
+                replaceBtn.dataset.disabled === "true" ||
+                removeBtn.dataset.disabled === "true" ||
+                bulkAccept.dataset.disabled === "true" ||
+                updateAll.dataset.disabled === "true"
+              ) {
+                ignoreBtn.click();
+              }
+            } catch (e) {
+              null;
+            }
+
+            clearTimeout(timeOut);
+            resolve(true);
+          }, 100);
+        });
+      }
+
+      if(isCardFake) break;
     }
   }
-  
+
+  async observerCallback(mutationsList, observer) {
+    for (let mutation of mutationsList) {
+      if (!mutation.addedNodes.length) continue;
+      if (mutation.removedNodes.length) continue;
+      if (mutation.addedNodes[0].nodeName !== "DIV") continue;
+      if (!this.target.querySelector('div[data-purpose="card-list-connector"]'))
+        continue;
+
+      if (
+        this.target.querySelector(
+          'div[data-purpose="card-list-connector"] div[data-id]'
+        )
+      ) {
+        observer.disconnect();
+        await this.replacer();
+        this.setEndOfContenteditable(document.querySelector(".ql-editor"));
+        observer.observe(this.target, this.config);
+      }
+    }
+  }
 }
 
 function checker(checkerCallback) {
