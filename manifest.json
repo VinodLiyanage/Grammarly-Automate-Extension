@@ -18,7 +18,7 @@
     "content_scripts" : [
       {
         "matches": ["*://app.grammarly.com/*"],
-        "run_at": "document_end",
+        "run_at": "document_idle",
         "js": [
           "/assets/js/contentScripts/automate.js"
         ]
