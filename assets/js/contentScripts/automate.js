@@ -10,6 +10,7 @@ class Observer {
   constructor(target) {
     this.target = target;
     this.config = { attributes: false, childList: true, subtree: true };
+    this.running = true;
   }
 
   init() {
@@ -18,13 +19,15 @@ class Observer {
     );
     this.observer.observe(this.target, this.config);
   }
-  
+
   setEndOfContenteditable(contentEditableElement) {
-    if(!(contentEditableElement && contentEditableElement instanceof HTMLElement)) return;
+    if (
+      !(contentEditableElement && contentEditableElement instanceof HTMLElement)
+    )
+      return;
 
     let range, selection;
     if (document.createRange) {
-     
       range = document.createRange(); //Create a range (a range is a like the selection but invisible)
       range.selectNodeContents(contentEditableElement); //Select the entire contents of the element with the range
       range.collapse(false); //collapse the range to the end point. false means collapse to end rather than the start
@@ -40,8 +43,36 @@ class Observer {
     }
   }
 
+  start() {
+    this.running = true;
+
+    this.observer.disconnect()
+    this.observer.observe(this.target, this.config)
+
+    const target = this.target.querySelector(
+      'div[data-purpose="card-list-connector"]'
+    )
+
+    if(!(target instanceof HTMLElement)) return;
+
+    const prevTemp = document.getElementById('grammaly-automator-fake-card')
+    if(prevTemp instanceof HTMLElement) {
+      prevTemp.remove()
+    }
+
+    const temp = document.createElement("div")
+    temp.setAttribute('data-id', 'grammaly-automator-fake-card')
+    temp.setAttribute('id', 'grammaly-automator-fake-card')
+
+    temp.style.display = 'none';
+    target.append(temp)
+  } 
+  stop() {
+    this.running = false;
+    this.observer.disconnect()
+  }
   async replacer() {
-    while (true) {
+    while (this.running) {
       let suggestionCardsList = Array.from(
         this.target.querySelectorAll(
           'div[data-purpose="card-list-connector"] div[data-id]'
@@ -58,12 +89,9 @@ class Observer {
 
       let isCardFake = true;
 
-      const editor = document.querySelector(".ql-editor");
-      if (editor instanceof HTMLElement) {
-        editor.setAttribute("contenteditable", "false");
-      }
-
       for (let parentElement of suggestionCardsList) {
+        if(!this.running) return; // immediate exit
+
         const card = parentElement.querySelector("div[data-aid]");
         if (!(card && card instanceof HTMLElement)) continue;
 
@@ -125,10 +153,6 @@ class Observer {
         });
       }
 
-      if (editor instanceof HTMLElement) {
-        editor.setAttribute("contenteditable", "true");
-      }
-
       if (isCardFake) break;
     }
   }
@@ -154,7 +178,7 @@ class Observer {
 
         observer.disconnect();
         await this.replacer();
-        this.setEndOfContenteditable(document.querySelector('.ql-editor'))
+        this.setEndOfContenteditable(document.querySelector(".ql-editor"));
         observer.observe(this.target, this.config);
       }
     }
@@ -174,9 +198,56 @@ function checker(checkerCallback) {
   }, 200);
 }
 
-function checkerCallback(element) {
+async function checkerCallback(element) {
+  addButtons();
   const observer = new Observer(element);
   observer.init();
+  handleButton(observer)
+  
+}
+
+async function handleButton(observer) {
+
+  const startbtn = document.getElementById("btnStartAutomator");
+  const stopbtn = document.getElementById("btnStopAutomator");
+
+  if (!(startbtn instanceof HTMLElement && stopbtn instanceof HTMLElement))
+    return;
+
+  const handleStart = () => {
+    observer.start()
+
+    startbtn.classList.add('grammarly-btn-click')
+    const startbtnTimeOut = setTimeout(()=> {
+      startbtn.classList.remove('grammarly-btn-click')
+      clearTimeout(startbtnTimeOut)
+    }, 500)
+   
+  };
+  const handleStop = () => {
+    observer.stop()
+
+    stopbtn.classList.add('grammarly-btn-click')
+    const stopbtnTimeOut = setTimeout(()=> {
+      stopbtn.classList.remove('grammarly-btn-click')
+      clearTimeout(stopbtnTimeOut)
+    }, 500)
+  };
+
+  startbtn.addEventListener("click", handleStart);
+  stopbtn.addEventListener("click", handleStop);
+}
+
+function addButtons() {
+  const parser = new DOMParser();
+
+  const htmlString = `<div class="grammarly-automator-shortcut-container" id="automatorBtnContainer">
+  <!--<p class="grammarly-automator-title">Grammarly Automator</p>-->
+  <button class="grammarly-automator-start-btn" id="btnStartAutomator">Start</button>
+  <button class="grammarly-automator-stop-btn" id="btnStopAutomator">Stop</button>
+  </div>`;
+  const element = parser.parseFromString(htmlString, "text/html");
+  document.body.insertAdjacentElement("afterbegin", element.body.firstChild);
 }
 
 (() => {

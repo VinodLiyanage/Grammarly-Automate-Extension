@@ -18,6 +18,7 @@
     "content_scripts" : [
       {
         "matches": ["*://app.grammarly.com/*"],
+        "css":["/assets/css/automator-shortcut.css"],
         "run_at": "document_idle",
         "js": [
           "/assets/js/contentScripts/automate.js"

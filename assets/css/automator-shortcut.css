@@ -1,0 +1,66 @@
+.grammarly-automator-start-btn {
+  background: rgb(17, 166, 131);
+  outline: none;
+  border: none;
+  padding: 0.5em;
+  color: #fff;
+  transform:scale(1);
+  -webkit-font-smoothing: antialiased;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif, Arial;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 0, 0.25em;
+}
+.grammarly-automator-start-btn:hover {
+  background: rgb(21, 195, 154);
+}
+.grammarly-automator-stop-btn {
+  background: rgb(234, 21, 55);
+  outline: none;
+  border: none;
+  padding: 0.5em;
+  color: #fff;
+  transform:scale(1);
+  -webkit-font-smoothing: antialiased;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif, Arial;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 0, 0.25em;
+}
+.grammarly-automator-stop-btn:hover {
+  background: rgb(238, 68, 95);
+}
+
+.grammarly-automator-shortcut-container {
+  position: fixed;
+  top: 2px;
+  left: 30%;
+  transform: translate(-50%, 0);
+  z-index: 9999999;
+  padding: 0.35em;
+  text-align: center;
+}
+.grammarly-automator-title {
+  padding: 0;
+  margin: 0 0 2px 0;
+  font-size: 12px;
+}
+
+.grammarly-btn-click {
+  animation-name: animate;
+  animation-duration: 500ms;
+  animation-iteration-count: 1;
+}
+
+@keyframes animate {
+  0% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
